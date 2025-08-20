@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Mitra {
+  id                 Int     @id @default(autoincrement())
+  namaLengkap        String
+  posisi             String?
+  statusSeleksi      String?
+  posisiDaftar       String?
+  alamatDetail       String?
+  alamatProv         Int?
+  alamatKab          Int?
+  alamatKec          Int?
+  alamatDesa         Int?
+  tempatTanggalLahir String?
+  jenisKelamin       String?
+  pendidikan         String?
+  pekerjaan          String?
+  deskripsiPekerjaan String?
+  noTelp             String?
+  sobatId            String?
+  email              String?
+  honors Honor[]
+}
+
+model Honor {
+  id_honor   Int     @id @default(autoincrement())
+  id_mitra  Int
+  januari    Decimal @default(0)
+  februari   Decimal @default(0)
+  maret      Decimal @default(0)
+  april      Decimal @default(0)
+  mei        Decimal @default(0)
+  juni       Decimal @default(0)
+  juli       Decimal @default(0)
+  agustus    Decimal @default(0)
+  september  Decimal @default(0)
+  oktober    Decimal @default(0)
+  november   Decimal @default(0)
+  desember   Decimal @default(0)
+  tahun   Int
+
+  mitra   Mitra? @relation(fields: [id_mitra], references: [id])
+}
+
+model KegiatanMitra {
+  id          Int      @id @default(autoincrement())
+  bulan       String
+  tanggal     String
+  tim         String
+  nama_survei String
+  nama_survei_sobat String?
+  kegiatan    String?
+  pcl_pml_olah String?
+  nama_petugas String?
+  id_sobat    String?
+  satuan      String
+  volum       Int?
+  harga_per_satuan   Decimal @db.Decimal(7,2)
+  jumlah      Decimal @db.Decimal(9,2)
+  konfirmasi  String?
+  flag_sobat  String?
+  tahun       Int?
+}
+
+model BatasHonor{
+  id Int @id @default(autoincrement())
+  nama_posisi String
+  biaya Int
+  keterangan String?
+  flag Int?
+}
+
+model Files{
+  id Int @id @default(autoincrement())
+  filename String
+  originalName String
+  mimetype String
+  size Int
+  path String
+  uploadDate DateTime
+  description String?
+}
