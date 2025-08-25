@@ -8,6 +8,7 @@ import {
 
 export class KegiatanMitraDto {
   
+  @IsOptional()
   id: number
 
     @IsString()
@@ -56,4 +57,7 @@ export class KegiatanMitraDto {
   flag_sobat : string
   
   tahun       : number
+
+  @IsString()
+  kegiatanId : string
 }

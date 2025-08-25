@@ -36,7 +36,11 @@ async function main() {
       })
       .on('end', async () => {
         if (mitraResults.length > 0) {
-          await prisma.mitra.createMany({ data: mitraResults });
+          await prisma.mitra.deleteMany({});
+          await prisma.mitra.createMany({ 
+            data: mitraResults,   
+            skipDuplicates: true 
+          });
           console.log('✅ Seed Mitra selesai.');
         }
         resolve();
@@ -44,7 +48,7 @@ async function main() {
       .on('error', reject);
   });
 
-  // Seed Batas Honor Mitra
+  //Seed Batas Honor Mitra
   const batasHonor = new Promise<void>((resolve, reject) => {
     fs.createReadStream('prisma/batashonor.csv')
       .pipe(csv({ separator: ';' }))
@@ -58,6 +62,7 @@ async function main() {
       })
       .on('end', async () => {
         if (batasHonorResults.length > 0) {
+          await prisma.batasHonor.deleteMany({});
           await prisma.batasHonor.createMany({ data: batasHonorResults });
           console.log('✅ Seed Batas Honor selesai.');
         }
@@ -67,40 +72,46 @@ async function main() {
   });
 
     // Seed Kegiatan Mitra
-  const kegiatanPromise = new Promise<void>((resolve, reject) => {
-    fs.createReadStream('prisma/kegiatan-mitra.csv')
-      .pipe(csv({ separator: ';' }))
-      .on('data', (data) => {
-        kegiatanResults.push({
-          bulan: data['BULAN LAPANGAN'],
-          tanggal: data['TANGGAL LAPANGAN'],
-          tim: data['TIM'],
-          nama_survei: data['NAMA SURVEI'],
-          nama_survei_sobat: data['NAMA SURVEI SOBAT'],
-          kegiatan: data['KEGIATAN'],
-          pcl_pml_olah: data['PCL/PML/OLAH'],
-          nama_petugas :data['NAMA PETUGAS'],
-          id_sobat: data['ID SOBAT'],
-          satuan: data['SATUAN'],
-          volum: parseInt(data['VOLUME']),
-          harga_per_satuan: parseInt(data['HARGA PER SATUAN']),
-          jumlah: parseInt(data['JUMLAH']),
-          konfirmasi: data['KETERANGAN/STATUS KONFIRMASI'],
-          flag_sobat: data['FLAG SOBAT'],
-          tahun: 2025
-        });
-      })
-      .on('end', async () => {
-        if (kegiatanResults.length > 0) {
-          await prisma.kegiatanMitra.createMany({ data: kegiatanResults });
-          console.log('✅ Seed Kegiatan Mitra selesai.');
-        }
-        resolve();
-      })
-      .on('error', reject);
-  });
+  // const kegiatanPromise = new Promise<void>((resolve, reject) => {
+  //   fs.createReadStream('prisma/kegiatan-mitra.csv')
+  //     .pipe(csv({ separator: ';' }))
+  //     .on('data', (data) => {
+  //       if (data['BULAN LAPANGAN']) {
+  //       kegiatanResults.push({
+  //         bulan: data['BULAN LAPANGAN'],
+  //         tanggal: data['TANGGAL LAPANGAN'],
+  //         tim: data['TIM'],
+  //         nama_survei: data['NAMA SURVEI'],
+  //         nama_survei_sobat: data['NAMA SURVEI SOBAT'],
+  //         kegiatan: data['KEGIATAN'],
+  //         pcl_pml_olah: data['PCL/PML/OLAH'],
+  //         nama_petugas :data['NAMA PETUGAS'],
+  //         id_sobat: data['ID SOBAT'],
+  //         satuan: data['SATUAN'],
+  //         volum: parseInt(data['VOLUME']),
+  //         harga_per_satuan: data['HARGA PER SATUAN']
+  //           ? parseInt(data['HARGA PER SATUAN'].replace(/,/g, ''))
+  //           : null,
+  //         jumlah: data['JUMLAH']
+  //           ? parseInt(data['JUMLAH'].replace(/,/g, ''))
+  //           : null,
+  //         konfirmasi: data['KETERANGAN/STATUS KONFIRMASI'],
+  //         flag_sobat: data['FLAG SOBAT'],
+  //         tahun: 2025
+  //       });
+  //     }})
+  //     .on('end', async () => {
+  //       if (kegiatanResults.length > 0) {
+  //         await prisma.kegiatanMitra.deleteMany({});
+  //         await prisma.kegiatanMitra.createMany({ data: kegiatanResults });
+  //         console.log('✅ Seed Kegiatan Mitra selesai.');
+  //       }
+  //       resolve();
+  //     })
+  //     .on('error', reject);
+  // });
 
-  await Promise.all([mitraPromise, kegiatanPromise, batasHonor]);
+  await Promise.all([mitraPromise, batasHonor]);
 }
 
 main()

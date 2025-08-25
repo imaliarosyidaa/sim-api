@@ -4,6 +4,7 @@ import { KegiatanmitraController } from './kegiatanmitra.controller';
 
 @Module({
   providers: [KegiatanmitraService],
-  controllers: [KegiatanmitraController]
+  controllers: [KegiatanmitraController],
+  exports: [KegiatanmitraService],
 })
 export class KegiatanmitraModule {}

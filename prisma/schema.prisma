@@ -30,49 +30,53 @@ model Mitra {
   pekerjaan          String?
   deskripsiPekerjaan String?
   noTelp             String?
-  sobatId            String?
+  sobatId            String @unique
   email              String?
   honors Honor[]
 }
 
 model Honor {
   id_honor   Int     @id @default(autoincrement())
-  id_mitra  Int
-  januari    Decimal @default(0)
-  februari   Decimal @default(0)
-  maret      Decimal @default(0)
-  april      Decimal @default(0)
-  mei        Decimal @default(0)
-  juni       Decimal @default(0)
-  juli       Decimal @default(0)
-  agustus    Decimal @default(0)
-  september  Decimal @default(0)
-  oktober    Decimal @default(0)
-  november   Decimal @default(0)
-  desember   Decimal @default(0)
+  sobatId  String
+  januari    Int @default(0)
+  februari   Int @default(0)
+  maret      Int @default(0)
+  april      Int @default(0)
+  mei        Int @default(0)
+  juni       Int @default(0)
+  juli       Int @default(0)
+  agustus    Int @default(0)
+  september  Int @default(0)
+  oktober    Int @default(0)
+  november   Int @default(0)
+  desember   Int @default(0)
   tahun   Int
 
-  mitra   Mitra? @relation(fields: [id_mitra], references: [id])
+  mitra   Mitra? @relation(fields: [sobatId], references: [sobatId])
+  @@unique([sobatId, tahun])
 }
 
 model KegiatanMitra {
   id          Int      @id @default(autoincrement())
   bulan       String
   tanggal     String
-  tim         String
+  tim         String?
   nama_survei String
   nama_survei_sobat String?
   kegiatan    String?
   pcl_pml_olah String?
   nama_petugas String?
-  id_sobat    String?
-  satuan      String
+  id_sobat    String
+  satuan      String?
   volum       Int?
-  harga_per_satuan   Decimal @db.Decimal(7,2)
-  jumlah      Decimal @db.Decimal(9,2)
+  harga_per_satuan   Decimal? @db.Decimal(12,2)
+  jumlah      Decimal? @db.Decimal(12,2)
   konfirmasi  String?
   flag_sobat  String?
-  tahun       Int?
+  tahun       Int
+
+  kegiatanId        String?
+  kegiatanMaster    Kegiatan?   @relation(fields: [kegiatanId], references: [kodeKegiatan])
 }
 
 model BatasHonor{
@@ -92,4 +96,18 @@ model Files{
   path String
   uploadDate DateTime
   description String?
+}
+
+model Kegiatan{
+  id Int @id @default(autoincrement())
+  bulan       String
+  tanggal     String
+  tim         String?
+  nama_survei String
+  nama_survei_sobat String?
+  kegiatan    String?
+  tahun Int
+  kodeKegiatan  String  @unique
+
+  mitra             KegiatanMitra[]
 }
