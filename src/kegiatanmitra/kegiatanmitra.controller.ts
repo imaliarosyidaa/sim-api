@@ -53,9 +53,10 @@ export class KegiatanmitraController {
     };
   }
 
-  @Get('count')
-  async countKegiatanMitra(){
-    const result = await this.KegiatanmitraService.countKegiatanMitra();
+  @Get('count/:tahun')
+  async countKegiatanMitra(@Param('tahun') tahun:string){
+    const year = Number(tahun)
+    const result = await this.KegiatanmitraService.countKegiatanMitra(year);
     return {
       status_code: 200,
       message: 'Get jumlah kegiatan mitra success',

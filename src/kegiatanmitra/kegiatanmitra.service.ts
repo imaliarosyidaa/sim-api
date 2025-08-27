@@ -32,15 +32,19 @@ export class KegiatanmitraService {
     return result
   }
 
-  async countKegiatanMitra() {
+  async countKegiatanMitra(year : number) {
     const dataMitra = await this.prisma.mitra.findMany({
       include: {
         _count: {
           select: {
-            KegiatanMitra: true,
+            KegiatanMitra:{
+              where:{
+                tahun: year
+              }
+            },
           },
         },
-      },
+      }
     });
 
     const sortedData = dataMitra.sort((a, b) => {
