@@ -23,21 +23,69 @@ export class KegiatanmitraService {
   }
 
   async getKegiatanMitraById(id: number) {
-    const semua = await this.getKegiatanMitra()
-    return semua.find((item)=> item.id === id)
+    const result = await this.prisma.mitra.findUnique({
+      where:{id},
+      include:{
+        KegiatanMitra:true
+      }
+    })
+    return result
+  }
+
+  async countKegiatanMitra() {
+    const dataMitra = await this.prisma.mitra.findMany({
+      include: {
+        _count: {
+          select: {
+            KegiatanMitra: true,
+          },
+        },
+      },
+    });
+
+    const sortedData = dataMitra.sort((a, b) => {
+      return b._count.KegiatanMitra - a._count.KegiatanMitra;
+    });
+
+    const formattedData = sortedData.map(mitra => ({
+      id: mitra.id,
+      namaLengkap: mitra.namaLengkap,
+      jumlahKegiatan: mitra._count.KegiatanMitra,
+    }));
+
+    return formattedData;
   }
 
   async createKegiatanMitra(dto: KegiatanMitraDto  ) {
+    const dataMitra = await this.prisma.mitra.findUnique({
+      where:{
+        sobatId: dto.id_sobat
+      }
+    })
+    if (!dataMitra) {
+      throw new NotFoundException(`Mitra dengan ID ${dto.id_sobat} tidak ditemukan.`);
+    }
+
+    const dataKegiatan = await this.prisma.kegiatan.findFirst({
+      where:{
+        kodeKegiatan: dto.kegiatanId
+      }
+    })
+
+    if (!dataKegiatan) {
+      throw new NotFoundException(`Mitra dengan ID ${dto.kegiatanId} tidak ditemukan.`);
+    }
+
     const result =  this.prisma.kegiatanMitra.create({
       data: {
-        bulan: dto.bulan,
-        tanggal: dto.tanggal,
-        tim: dto.tim,
-        nama_survei: dto.nama_survei,
-        nama_survei_sobat: dto.nama_survei_sobat,
-        kegiatan: dto.kegiatan,
+        bulan: dataKegiatan.bulan,
+        tanggal: dataKegiatan.tanggal,
+        tim: dataKegiatan.tim,
+        nama_survei: dataKegiatan.nama_survei,
+        nama_survei_sobat: dataKegiatan.nama_survei_sobat,
+        kegiatan: dataKegiatan.kegiatan,
         pcl_pml_olah: dto.pcl_pml_olah,
-        nama_petugas: dto.nama_petugas,
+        nama_petugas: dataMitra.namaLengkap,
         id_sobat: dto.id_sobat,
         satuan: dto.satuan,
         volum: dto.volum,
@@ -45,11 +93,16 @@ export class KegiatanmitraService {
         jumlah: dto.jumlah,
         konfirmasi: dto.konfirmasi,
         flag_sobat: dto.flag_sobat,
-        tahun: dto.tahun,
+        tahun: dataKegiatan.tahun,
         kegiatanId: dto.kegiatanId
       },
     });
-    await this.updateHonorPerBulan(dto);
+    const honorPayload = {
+      ...dto,
+      bulan: dataKegiatan.bulan,
+      tahun: dataKegiatan.tahun,
+    };
+    await this.updateHonorPerBulan(honorPayload);
 
     return result;
   }
@@ -211,7 +264,7 @@ async updateHonorBulanTertentu(id_sobat: string, bulan: string, tahun: number) {
   return crypto.createHash('md5').update(key).digest('hex');
 }
 
-async processExcelFile(file: Express.Multer.File): Promise<any> {
+async uploadExcelFile(file: Express.Multer.File): Promise<any> {
   const workbook = XLSX.read(file.buffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -220,10 +273,34 @@ async processExcelFile(file: Express.Multer.File): Promise<any> {
 
   if (dataToProcess.length === 0) {
     return {
-      message: 'Tidak ada data valid yang ditemukan untuk diunggah.',
-      count: 0
+      statusCode: 500,
+      message: 'Data kosong. Tambahkan baris.',
     };
   }
+
+  const dataWithMissingId = dataToProcess.filter(row => !row['ID SOBAT']);
+    if (dataWithMissingId.length > 0) {
+      throw new BadRequestException('Terdapat data dengan ID Sobat yang kosong. Mohon periksa kembali file Anda.');
+    } 
+    const uniqueSobatIds = [...new Set(dataToProcess.map(row => String(row['ID SOBAT'])))];
+
+const existingMitras = await this.prisma.mitra.findMany({
+  where: { 
+    sobatId: { in: uniqueSobatIds },
+  },
+  select: { sobatId: true },
+});
+    const existingSobatIdSet = new Set(existingMitras.map(m => m.sobatId));
+
+    const nonExistingSobatIds = uniqueSobatIds.filter(id => !existingSobatIdSet.has(id));
+    if (nonExistingSobatIds.length > 0) {
+      throw new BadRequestException(`ID Sobat berikut tidak ditemukan di database: ${nonExistingSobatIds.join(', ')}`);
+    }
+
+    return dataToProcess;
+  }
+
+async processExcelFile(dataToProcess): Promise<any> {
 
   const kegiatanData = await Promise.all(
     dataToProcess.map(async (row) => {
@@ -299,8 +376,9 @@ async processExcelFile(file: Express.Multer.File): Promise<any> {
   await this.updateHonorPerBulan(validData);
 
   return {
+    statusCode: 200,
     message: `${result.count} data berhasil diunggah dan disimpan.`,
-    count: result.count
+    data: result,
   };
 }
 }

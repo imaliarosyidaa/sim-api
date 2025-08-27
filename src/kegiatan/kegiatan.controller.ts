@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { KegiatanService } from './kegiatan.service';
 import { KegiatanDto } from './dto/kegiatan.dto';
 
@@ -15,4 +15,10 @@ export class KegiatanController {
           data : response,
         };
       }
+
+  @Get(':tahun')
+  async getClassByPengajarId(@Param('tahun') tahun: string) {
+    const year = Number(tahun);
+    return this.kegiatanService.getRekapKegiatan(year);
+  }
 }

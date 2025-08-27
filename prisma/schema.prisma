@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -33,6 +33,7 @@ model Mitra {
   sobatId            String @unique
   email              String?
   honors Honor[]
+  KegiatanMitra KegiatanMitra[]
 }
 
 model Honor {
@@ -53,7 +54,7 @@ model Honor {
   tahun   Int
 
   mitra   Mitra? @relation(fields: [sobatId], references: [sobatId])
-  @@unique([sobatId, tahun])
+  @@unique([sobatId, tahun], name: "sobatId_tahun")
 }
 
 model KegiatanMitra {
@@ -77,6 +78,7 @@ model KegiatanMitra {
 
   kegiatanId        String?
   kegiatanMaster    Kegiatan?   @relation(fields: [kegiatanId], references: [kodeKegiatan])
+  mitra Mitra? @relation(fields: [id_sobat], references: [sobatId])
 }
 
 model BatasHonor{

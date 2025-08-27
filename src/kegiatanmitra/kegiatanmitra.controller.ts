@@ -34,13 +34,39 @@ export class KegiatanmitraController {
       throw new BadRequestException('File tidak ditemukan.');
     }
 
-    const result = await this.KegiatanmitraService.processExcelFile(file);
+    const result = await this.KegiatanmitraService.uploadExcelFile(file);
 
     return {
-      statusCode: 200,
-      message: 'File berhasil diunggah dan diproses.',
-      data: result,
+      status_code: 200,
+      message: 'File berhasil diupload',
+      data : result,
     };
+  }
+
+  @Post('save')
+  async saveValidatedData(@Body() data: any) {
+    const result = await this.KegiatanmitraService.processExcelFile(data);
+    return {
+      status_code: 200,
+      message: 'File berhasil dikirim',
+      data : result,
+    };
+  }
+
+  @Get('count')
+  async countKegiatanMitra(){
+    const result = await this.KegiatanmitraService.countKegiatanMitra();
+    return {
+      status_code: 200,
+      message: 'Get jumlah kegiatan mitra success',
+      data : result,
+    };
+  }
+
+    @Get(':id')
+  async getKegiatanMitraById(@Param('id') id: number) {
+    const idMitra = Number(id);
+    return this.KegiatanmitraService.getKegiatanMitraById(idMitra);
   }
 
 @Delete('delete')
